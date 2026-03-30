@@ -239,6 +239,43 @@ function KnowledgeBase() {
 
       {/* Main */}
       <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px 28px 60px" }}>
+        
+        {/* Featured Project Card */}
+        <div style={{
+          border: "1px solid #1a1a2e",
+          borderRadius: "8px",
+          padding: "24px",
+          margin: "0 0 24px 0",
+          backgroundColor: "#0c0c18",
+          borderLeft: "3px solid #3b82f6",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.2)"
+        }}>
+          <h3 style={{ marginTop: 0, color: "#d0d0e0", fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>
+            🛡️ Interactive Defense in Depth Map
+          </h3>
+          <p style={{ color: "#b0b8c8", lineHeight: "1.6", fontSize: "14px", marginBottom: "20px" }}>
+            A technical visualization of the modern enterprise security stack. Explore the relationship between technical controls, the UNICORN Framework for AI guardrails, and the GRC/SOC roles that manage them.
+          </p>
+          <a href="https://rupindersecurity.github.io/cybersecurity-defense-map/" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             style={{
+               backgroundColor: "#3b82f6",
+               color: "#ffffff",
+               padding: "10px 20px",
+               textDecoration: "none",
+               borderRadius: "6px",
+               fontWeight: 600,
+               fontSize: "13px",
+               display: "inline-block",
+               transition: "opacity 0.2s"
+             }}
+             onMouseOver={(e) => e.currentTarget.style.opacity = "0.9"}
+             onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+          >
+             Launch Interactive Map &rarr;
+          </a>
+        </div>
 
         {/* Search */}
         <input
