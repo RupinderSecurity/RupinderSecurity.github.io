@@ -18,7 +18,7 @@ A comprehensive, searchable technical reference covering 40+ topics across cloud
 
 ## Live Site
 
-Visit: [https://YOUR-USERNAME.github.io](https://YOUR-USERNAME.github.io)
+Visit: [https://RupinderSecurity.github.io](https://RupinderSecurity.github.io)
 
 ## License
 
