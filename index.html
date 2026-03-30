@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compliance-as-Code: A Technical Guide for GRC Professionals | Rupinder Pal Singh</title>
+<meta name="description" content="40+ technical topics covering cloud architecture, FedRAMP 20x, OSCAL, security scanning, DevSecOps, and AI for compliance. Written for GRC professionals.">
+<meta property="og:title" content="Compliance-as-Code: A Technical Guide for GRC Professionals">
+<meta property="og:description" content="The technical reference GRC professionals need. 40+ topics, 16 FAQs, fully searchable.">
+<meta property="og:type" content="website">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #060610; color: #d0d0e0; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; }
+#root { min-height: 100vh; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="root"></div>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+
+const defined_topics = [
+  // COMPLIANCE TOOLS
+  { cat: "tools", title: "Steampipe", desc: "Query cloud APIs using SQL. Connects to AWS, Azure, Entra ID via plugins and turns APIs into database tables. Zero-ETL — queries live data in real time. Open source (AGPL 3.0 CLI, Apache 2.0 plugins).", code: "SELECT name, encryption FROM aws_s3_bucket\nWHERE encryption IS NULL;", compliance: "Produces structured evidence for any framework. FedRAMP, PCI DSS, ISO 27001 — write SQL, get compliance data.", keywords: "steampipe sql query cloud evidence" },
+  { cat: "tools", title: "Prowler", desc: "Automated cloud security scanner with hundreds of built-in checks mapped to compliance frameworks: FedRAMP Moderate, PCI DSS, CIS Benchmarks, NIST 800-53, SOC 2, ISO 27001, HIPAA. Point at an AWS/Azure account, run one command, get a pass/fail report. Open source (Apache 2.0).", code: "prowler aws --compliance fedramp_moderate", compliance: "Automated evidence for RA-5, SI-2, CM-6. Replaces manual screenshot collection.", keywords: "prowler scan framework security" },
+  { cat: "tools", title: "OPA (Open Policy Agent)", desc: "Policy engine where you write custom rules in a language called Rego. Feed it data, it returns pass/fail. This is where YOUR compliance logic lives — organization-specific policies, custom requirements, controls that no off-the-shelf tool covers. CNCF Graduated project (Apache 2.0). Used by Netflix, Goldman Sachs at scale.", code: 'deny["Encryption not enabled"] {\n  input.encrypted == false\n}', compliance: "Encode any control as testable code. PCI DSS compensating controls, FedRAMP boundary rules, custom requirements.", keywords: "opa policy rego rules engine" },
+  { cat: "tools", title: "Vanta", desc: "SaaS compliance platform for continuous evidence collection. Strong for SOC 2 and ISO 27001. Automates access reviews, policy tracking, vendor risk management, and questionnaire responses. Not FedRAMP authorized — cannot be used for FedRAMP workloads. Best paired with open-source tools for frameworks it doesn't cover.", compliance: "SOC 2, ISO 27001 primary. Surface-level PCI DSS. No FedRAMP, no custom framework support.", keywords: "vanta compliance platform saas" },
+  { cat: "tools", title: "The Pipeline: How They Work Together", desc: "Steampipe collects data (what does our environment look like?). Prowler scans against frameworks (does it pass standard checks?). OPA enforces custom policies (does it meet our specific rules?). Results are formatted as OSCAL JSON — machine-readable evidence for FedRAMP 20x. This entire chain can run on a schedule via Lambda, cron, or CI/CD.", compliance: "FedRAMP 20x requires 70%+ automated validation of KSIs. This pipeline produces that evidence.", keywords: "pipeline compliance-as-code automation evidence" },
+  { cat: "tools", title: "Aikido Security (ASPM)", desc: "Application Security Posture Management platform that consolidates SAST, DAST, SCA, secrets detection, IaC scanning, container scanning, and license monitoring into one tool. Replaces the need for separate SonarQube + Veracode + BlackDuck + GitGuardian. AI-powered noise reduction claims 75-92% fewer false positives.", compliance: "PCI DSS Req 6, FedRAMP SA-11/SI-10, ISO 27001 A.8.25-A.8.29. Generates SBOMs for supply chain compliance.", keywords: "aikido aspm scanning security application" },
+
+  // FEDRAMP & OSCAL
+  { cat: "fedramp", title: "FedRAMP 20x Overview", desc: "Complete redesign of FedRAMP authorization. Replaces 325+ narrative NIST controls with 56-61 Key Security Indicators (KSIs) validated through automation. Removes agency sponsor requirement. Pilot participants authorized in under 2 months vs 12-18 months under Rev5. Machine-readable OSCAL packages mandatory by September 2026.", compliance: "All new authorizations will be 20x after 2027. Existing Rev5 providers must transition.", keywords: "fedramp 20x authorization ksi" },
+  { cat: "fedramp", title: "Key Security Indicators (KSIs)", desc: "Measurable security outcomes that replace traditional control narratives. 56 for Low, 61 for Moderate. Grouped into themes: Authorization by FedRAMP (KSI-AFR), Cybersecurity Education (KSI-CED), Change Management (KSI-CMT), Monitoring/Logging/Auditing (KSI-MLA), Policy & Inventory (KSI-PIY), plus Cloud Native Architecture, IAM, Vulnerability Detection, Incident Response, and Supply Chain.", compliance: "Phase 2 requires 70%+ automated validation. Each KSI must be addressed with evidence.", keywords: "ksi key security indicators themes" },
+  { cat: "fedramp", title: "FedRAMP 20x Timeline", desc: "Phase 1 (complete Sept 2025): Low pilot, 12 authorizations. Phase 2 (through March 2026): Moderate pilot, ~13 participants. Phase 3 (Q3-Q4 2026): Formalize Low/Moderate, wide-scale adoption. Phase 4 (Q1-Q2 2027): Pilot High authorizations. Phase 5 (Q3-Q4 2027): Stop accepting new Rev5 authorizations. All phases delayed ~3 months due to government shutdown.", keywords: "fedramp timeline phases schedule" },
+  { cat: "fedramp", title: "OSCAL (Deep Dive)", desc: "Open Security Controls Assessment Language — NIST-developed JSON/XML format for machine-readable compliance. Four models: Catalog (control definitions), Profile (which controls apply), SSP (how you implement them), Assessment Results (evidence they work). OSCAL doesn't discover implementations — you build the map. Your pipeline generates Assessment Results automatically.", code: '{\n  "control-id": "ac-2",\n  "implementation-status": "implemented",\n  "description": "Account management via Entra ID..."\n}', compliance: "Mandatory for all FedRAMP providers by September 2026.", keywords: "oscal json machine-readable nist ssp" },
+  { cat: "fedramp", title: "OSCAL Tools Landscape", desc: "Paramify: Commercial, guided SSP-to-OSCAL generation, was in 20x Phase 2 pilot. Lula (Defense Unicorns): Open source, connects OSCAL to automated validation for K8s. GoComply: Open source, converts between OSCAL and FedRAMP Word templates. EasyDynamics: Open source React library for rendering OSCAL. GSA fedramp-automation: Official validation rules and templates. GAP: No end-to-end open-source pipeline from SSP docx to OSCAL to automated validation to dashboard.", keywords: "paramify lula gocomply tools oscal" },
+  { cat: "fedramp", title: "FIPS Endpoints", desc: "AWS services have standard endpoints (s3.us-east-1.amazonaws.com) and FIPS endpoints (s3-fips.us-east-1.amazonaws.com). FIPS endpoints use FIPS 140-2 validated cryptographic modules for TLS. FedRAMP Moderate requires FIPS-validated encryption in transit. Switching is a URL change — same service, same data, FIPS-validated crypto. In GovCloud, FIPS endpoints are the default.", compliance: "FedRAMP SC-13, SC-8. Mechanically trivial but compliance-critical.", keywords: "fips endpoint encryption transit" },
+
+  // DEVELOPER TOOLS
+  { cat: "devtools", title: "GitHub & GitLab", desc: "Platforms where teams store, version, and collaborate on code. Every change tracked forever with who, when, and why. Code changes follow a flow: branch (copy) → code (write changes) → push (upload) → pull request (formal review request) → automated scans run → review → merge. GitHub owned by Microsoft, more open-source focused. GitLab independent, more enterprise/DevOps focused.", keywords: "github gitlab version control code repository" },
+  { cat: "devtools", title: "What Is a Repository (Repo)?", desc: "A project folder stored on GitHub/GitLab that tracks every change to every file forever. Contains source code, configuration, infrastructure definitions, CI/CD pipeline files, and documentation. Classified as Private (team only), Internal (organization-wide), or Public (internet-accessible). A company might have hundreds of repos: one per microservice, one for infrastructure, one for docs.", keywords: "repo repository folder project" },
+  { cat: "devtools", title: "CI/CD Pipelines", desc: "Continuous Integration / Continuous Deployment — the automated assembly line for code. Developer pushes code → pipeline triggers → build → test → security scan (SAST, SCA, secrets, IaC) → deploy. If ANY stage fails, code doesn't deploy. Defined by a YAML file (.github/workflows/ci.yml or .gitlab-ci.yml) that lives in the repo alongside the code.", compliance: "Every scan produces a report. Every blocked deployment is logged. Compliance evidence generates automatically.", keywords: "cicd pipeline automation deploy yaml" },
+  { cat: "devtools", title: "CI/CD YAML Protection", desc: "The pipeline YAML file lives in the repo and can be modified by any developer with write access. Must be protected via: branch protection rules (require PR reviews), CODEOWNERS file (security team must approve pipeline changes), required status checks (enforced at org level, can't be bypassed), audit logging, and signed commits.", compliance: "CM-3 (Configuration Change Control). Unauthorized pipeline modification can bypass all security controls.", keywords: "yaml protection codeowners branch" },
+  { cat: "devtools", title: "Terraform", desc: "Infrastructure as Code (IaC). Instead of clicking through the AWS console to create resources, you write a text file describing what you want. Terraform builds it. Every change is code, stored in Git, reviewed in PRs, auditable. The code IS the documentation. OPA policies can validate Terraform plans before they deploy.", code: 'resource "aws_s3_bucket" "evidence" {\n  bucket = "compliance-evidence-prod"\n  tags = { Framework = "FedRAMP" }\n}', compliance: "FedRAMP 20x KSI-CMT (Change Management). The Terraform code is your configuration baseline.", keywords: "terraform iac infrastructure code" },
+  { cat: "devtools", title: "Docker & Containers", desc: "A container packages your code AND everything it needs (OS, libraries, config) into one portable box that runs identically everywhere. Docker is the tool that creates and runs containers. A Dockerfile is the recipe. Containers are immutable — they don't change after deployment, proving to auditors that production matches what was tested.", compliance: "FedRAMP 20x KSI-CNA explicitly requires immutable containers. Aikido/Prowler scan container images for CVEs.", keywords: "docker container image immutable" },
+  { cat: "devtools", title: "Kubernetes (K8s)", desc: "Orchestrator that manages hundreds of containers across servers. Handles scaling, restarts, load balancing, rolling updates. EKS is AWS-managed Kubernetes (AWS runs the control plane, you manage worker nodes). OPA integrates as an 'admission controller' — blocking any deployment that violates your policies.", compliance: "K8s RBAC, network policies, and pod security map to AC-6, SC-7. KSI-CNA references micro-services architecture.", keywords: "kubernetes k8s orchestration eks containers" },
+
+  // SECURITY SCANNING
+  { cat: "scanning", title: "SAST (Static Application Security Testing)", desc: "Scans source code for security vulnerabilities: SQL injection, XSS, buffer overflows, code quality issues. Tools: SonarQube, Veracode SAST, Aikido SAST. Runs in CI/CD on every pull request. Finds bugs in code YOUR developers wrote. Does NOT find secrets — different detection method.", keywords: "sast static code scanning sonarqube" },
+  { cat: "scanning", title: "DAST (Dynamic Application Security Testing)", desc: "Attacks the RUNNING application from outside — simulating a real attacker. Sends malicious HTTP requests and checks responses. Finds runtime vulnerabilities: misconfigurations, authentication bypasses, exposed endpoints. Tools: Veracode DAST, Aikido DAST, ZAP. Never sees source code — tests the deployed app.", keywords: "dast dynamic runtime attack testing" },
+  { cat: "scanning", title: "SCA (Software Composition Analysis)", desc: "Scans open-source libraries your code USES (not wrote). Your app imports hundreds of packages — SCA checks every one for known CVEs, license risks, and end-of-life status. Tools: Black Duck (Synopsys), Aikido SCA. Generates SBOMs. When Log4Shell hit, companies with SCA knew in minutes if they were affected.", keywords: "sca composition libraries blackduck dependencies" },
+  { cat: "scanning", title: "Secrets Detection", desc: "Pattern matching + entropy analysis to find API keys, passwords, tokens, and private keys in code. Uses known formats (AKIA... = AWS key) and randomness detection (high-entropy strings). Scans current code AND full Git history — deleted secrets are still in history. Tools: GitGuardian, Aikido Secrets. SAST/DAST/SCA do NOT catch secrets — different specialization.", keywords: "secrets detection gitguardian api keys passwords" },
+  { cat: "scanning", title: "SBOM (Software Bill of Materials)", desc: "Complete ingredient list of every component in your software with exact versions and licenses. Two formats: CycloneDX (OWASP) and SPDX (Linux Foundation). Both are JSON/XML. Executive Order 14028 made SBOMs a federal requirement. FedRAMP 20x KSI-SCR requires automated supply chain monitoring — SBOMs are the evidence.", keywords: "sbom bill materials cyclonedx spdx supply chain" },
+  { cat: "scanning", title: "Why SAST/DAST Don't Catch Secrets", desc: "SAST analyzes code LOGIC (can an attacker manipulate this input?). DAST attacks from outside (never sees source code). SCA checks dependency VERSIONS. None read files looking for strings matching API key patterns. Secrets detection uses a completely different approach: pattern matching against known formats and entropy analysis for randomness. Different inspector, different specialty.", keywords: "why sast dast miss secrets gap" },
+
+  // CLOUD ARCHITECTURE
+  { cat: "cloud", title: "AWS Regions & Availability Zones", desc: "Regions are geographic locations (us-east-1 = Virginia, eu-west-2 = London). Each has 2-6 Availability Zones — physically separate data centers. Deploy across AZs for high availability. Data residency requirements determine which regions you can use.", compliance: "Data sovereignty. FedRAMP data stays in US/GovCloud. Steampipe queries check for resources in unauthorized regions.", keywords: "aws region availability zone location" },
+  { cat: "cloud", title: "AWS GovCloud", desc: "Physically isolated regions (us-gov-west-1, us-gov-east-1) for US government workloads. Operated by US persons on US soil. FedRAMP High authorized. FIPS endpoints by default. Separate IAM, billing, endpoints.", keywords: "govcloud government fedramp isolated" },
+  { cat: "cloud", title: "VPC / Subnets / Security Groups", desc: "VPC = your isolated private network. Subnets divide it: public (internet-reachable), private (internal only), data (most restricted). Security Groups are instance-level firewalls defining allowed traffic by port/protocol/source. The classic compliance check: 'Show me all security groups allowing SSH from 0.0.0.0/0.'", compliance: "PCI DSS network segmentation, FedRAMP authorization boundary, SC-7 boundary protection.", keywords: "vpc subnet security group network firewall" },
+  { cat: "cloud", title: "VPC Peering vs PrivateLink", desc: "Peering: bidirectional network connection between two VPCs. Traffic stays on AWS backbone. Each side controls access via its own security groups. Like a private tunnel between buildings. PrivateLink: exposes one specific service from one VPC into another. Consuming VPC sees it as a local endpoint. Unidirectional service access, not full network connectivity. Like a dedicated phone line to one department.", compliance: "PrivateLink preferred for FedRAMP (least privilege). FIPS endpoints + PrivateLink = gold standard for sensitive data.", keywords: "peering privatelink vpc connection" },
+  { cat: "cloud", title: "Multi-Account Architecture", desc: "Large organizations use separate AWS accounts for isolation: Management (billing), Security (CloudTrail, SIEM), Production (customer-facing), Staging, Development, Shared Services, Log Archive. If Dev account is compromised, Production is untouched. Connected via peering, Transit Gateway, or PrivateLink.", keywords: "multi-account organization isolation blast radius" },
+  { cat: "cloud", title: "AWS Organizations & SCPs", desc: "Groups accounts under one umbrella. Service Control Policies (SCPs) set guardrails that override even root admin permissions. 'No account may create resources outside approved regions.' 'No account may disable CloudTrail.' The highest authority in the organization.", compliance: "AC-6 (Least Privilege), CM-7 (Least Functionality). Strongest preventive control.", keywords: "organizations scp policy guardrail" },
+  { cat: "cloud", title: "Shared Responsibility Model", desc: "AWS secures the cloud (physical, hardware, hypervisors). You secure what's IN the cloud (data, IAM, encryption config, network rules). Responsibility varies by service: EC2 = you manage almost everything. Lambda = AWS manages almost everything. The more managed the service, the less you're responsible for.", keywords: "shared responsibility model aws" },
+  { cat: "cloud", title: "Key AWS Security Services", desc: "CloudTrail: logs every API call (who did what, when). CloudWatch: metrics, logs, alarms. GuardDuty: AI threat detection. Security Hub: aggregates findings, maps to CIS/PCI/NIST. AWS Config: continuous configuration compliance. WAF: web application firewall. Inspector: vulnerability scanning. KMS: encryption key management (FIPS 140-2 Level 3). Secrets Manager: stores/rotates credentials.", keywords: "cloudtrail guardduty security hub config waf kms" },
+  { cat: "cloud", title: "AWS Bedrock", desc: "Managed AI service. Run Claude (Anthropic), Llama (Meta), Mistral, Amazon Titan through one API. Data stays in your AWS account. Available in GovCloud for FedRAMP. Pay per token. No infrastructure to manage. For RAG: use Bedrock for the language model + OpenSearch for the vector database.", keywords: "bedrock ai llm claude managed models" },
+  { cat: "cloud", title: "Compute Options: EC2 vs Lambda vs Fargate", desc: "EC2: virtual servers you fully manage (highest flexibility, highest responsibility). Lambda: serverless functions triggered by events, max 15 minutes, pay per execution (lowest responsibility). Fargate: serverless containers, no server management, runs Docker images (middle ground). Your compliance pipeline could run as Lambda functions at minimal cost.", keywords: "ec2 lambda fargate compute serverless" },
+
+  // SECURITY CONCEPTS
+  { cat: "security", title: "IAM / RBAC / Zero Trust", desc: "IAM manages identity and access. RBAC assigns permissions to roles, not individuals. Zero Trust: verify everything, trust nothing — every request authenticated, authorized, encrypted regardless of network location. Entra ID Conditional Access implements Zero Trust: MFA + device compliance + location + risk score evaluated on every access.", compliance: "FedRAMP 20x KSI-IAM directly maps to Zero Trust. PCI DSS Req 7-8. ISO 27001 A.5.15-A.5.18.", keywords: "iam rbac zero trust identity access" },
+  { cat: "security", title: "Entra ID (Azure AD)", desc: "Microsoft's cloud identity service (renamed from Azure Active Directory in 2023). Handles authentication (who are you), SSO (one login for everything), conditional access (Zero Trust policies), group-based RBAC, and application registration. When Entra ID account is disabled at offboarding, all connected application access is revoked simultaneously.", keywords: "entra id azure ad identity sso conditional" },
+  { cat: "security", title: "SIEM & Logging Architecture", desc: "SIEM (Security Information and Event Management) aggregates logs from all sources: CloudTrail, Azure Activity, Entra ID sign-ins, application logs, firewall/WAF, Kubernetes audit. Correlates events across sources, alerts on suspicious patterns, retains logs for compliance. Tools: Splunk, Microsoft Sentinel, Elastic/ELK.", compliance: "FedRAMP KSI-MLA, PCI DSS Req 10, ISO 27001 A.8.15. Centralized tamper-resistant logging with regular review.", keywords: "siem logging splunk sentinel cloudtrail" },
+  { cat: "security", title: "KMS & Encryption", desc: "AWS KMS: creates/stores encryption keys in FIPS 140-2 Level 3 hardware security modules. Key never leaves the HSM. Supports automatic annual rotation. Azure equivalent: Azure Key Vault. Encryption at rest (stored data) + encryption in transit (data moving between systems) are separate controls requiring separate evidence.", compliance: "FedRAMP SC-12, SC-28. PCI DSS Req 3.5-3.6. FIPS validation required for FedRAMP.", keywords: "kms encryption keys fips vault" },
+  { cat: "security", title: "API Keys: Safe vs Dangerous", desc: "Dangerous: AWS access keys (AKIA...), database connection strings with passwords, private SSH/TLS keys, OAuth/bearer tokens — anything that can read/write/modify/delete data. Safe to expose: Google Maps client-side keys (domain-restricted), Stripe publishable keys (pk_live_, can only create tokens), public encryption keys (designed to be shared). Rule: if the key grants access to data, it's dangerous.", keywords: "api key secret dangerous safe exposed" },
+  { cat: "security", title: "Secrets in Code: Why It Happens", desc: "Developers hardcode secrets because it's the path of least resistance. Common scenarios: testing locally and forgetting to remove, not knowing about .env files, config files with embedded passwords, copy-paste from internal docs. Fix: automated guardrails (GitGuardian/Aikido), secrets management tools (Vault, AWS Secrets Manager, Key Vault), CI/CD gates that block merges with detected secrets.", keywords: "secrets code hardcoded developers why" },
+
+  // ARCHITECTURE
+  { cat: "architecture", title: "Microservices vs Monolith", desc: "Monolith: one big application doing everything, deployed as one unit. If one part breaks, everything breaks. Microservices: many small independent services, each doing one thing, each its own container and deployment. FedRAMP 20x KSI-CNA explicitly requires micro-services architecture. Key audit benefit: not every microservice is in PCI/FedRAMP scope.", keywords: "microservices monolith architecture" },
+  { cat: "architecture", title: "API Gateway", desc: "Infrastructure service sitting between the internet and your microservices. Handles authentication, rate limiting, TLS termination, request routing, logging. AWS API Gateway, Kong, Azure API Management. Single entry point for security controls. You can see it in architecture diagrams, it has logs and policies you audit directly.", keywords: "api gateway routing authentication infrastructure" },
+  { cat: "architecture", title: "Facade Pattern", desc: "A CODE pattern (not infrastructure) that provides a simple interface to a complex system. One function call that internally calls 5 different services, combines results, returns one clean output. Lives inside application code, not visible in network diagrams. Does not handle auth/TLS/logging. Contains business logic.", keywords: "facade pattern code simplification" },
+  { cat: "architecture", title: "Facade vs API Gateway", desc: "API Gateway = real infrastructure handling network traffic (auth, TLS, logging, routing). Visible in architecture diagrams. Auditable. Facade = code pattern simplifying complexity (orchestration logic). Lives inside application code. Not directly auditable. They overlap when a gateway is configured to combine multiple backend calls. Simple rule: 'gateway' = network/infrastructure. 'Facade' = code/simplification.", keywords: "facade gateway difference comparison" },
+  { cat: "architecture", title: "Serverless: Lambda & Fargate", desc: "Lambda: upload a function, AWS runs it on triggers (schedule, API call, file upload). No servers. Pay per millisecond. Max 15 min. Fargate: run Docker containers without managing servers. More flexible than Lambda (no time limit). Both reduce your compliance surface — AWS manages the underlying infrastructure.", keywords: "serverless lambda fargate function" },
+  { cat: "architecture", title: "DevSecOps & GitOps", desc: "DevSecOps: security embedded at every stage, not bolted on at the end. Shift-left — catch vulnerabilities while writing code, not in production. GitOps: Git is the single source of truth for everything — code, infrastructure, policies, configurations. Every change through PRs with full audit trail. Together they produce CM-3 change control as a natural byproduct of the workflow.", keywords: "devsecops gitops shift-left security" },
+
+  // AI & ML
+  { cat: "ai", title: "RAG (Retrieval-Augmented Generation)", desc: "Makes LLMs work with YOUR data. Process: chunk documents into ~500-word pieces → convert to vector embeddings (numbers representing meaning) → store in vector database → when user asks a question, find most similar chunks → send chunks + question to LLM → LLM answers from your actual documents with citations. Not training — just giving the LLM context at query time.", keywords: "rag retrieval augmented generation documents" },
+  { cat: "ai", title: "Vector Databases", desc: "Stores meaning as numbers and searches by similarity (not exact match like SQL). ChromaDB runs locally (free, your laptop). AWS OpenSearch supports vectors. Azure AI Search supports vectors. Pinecone is cloud-hosted. For a compliance RAG: your policies, SSP, audit reports become searchable by meaning, not just keywords.", keywords: "vector database chromadb opensearch embeddings" },
+  { cat: "ai", title: "MCP (Model Context Protocol)", desc: "Anthropic-created standard that lets AI models connect to external tools and data sources. An MCP server is a small program (50-200 lines of code) that defines tools the AI can call: read email, query databases, search repos, call APIs. Not a physical server — just a script running anywhere. Like USB standardized device connections, MCP standardizes AI tool connections.", keywords: "mcp model context protocol tools" },
+  { cat: "ai", title: "RAG vs MCP", desc: "RAG: LLM doesn't know your documents → retrieve relevant chunks → answer from static content. MCP: LLM can't take actions → call tools to query live systems, create files, send messages. Together: 'Compare our SSP claims about encryption against actual AWS state' → RAG retrieves SSP claims → MCP queries live AWS via Steampipe → LLM compares and identifies gaps. Complementary, not competing.", keywords: "rag mcp difference comparison" },
+  { cat: "ai", title: "LLM Deployment Options", desc: "Local (Ollama): free, private, limited to smaller models (8B-13B on 24GB RAM). Cloud API (OpenRouter, Groq): pay per query, access to 70B+ models, $5-20/month for research. AWS Bedrock: managed, Claude/Llama in your AWS account, FedRAMP-compliant in GovCloud. Training from scratch: requires thousands of GPUs, millions of dollars — not for individuals.", keywords: "llm deployment ollama bedrock api local" },
+  { cat: "ai", title: "Training vs Fine-Tuning vs RAG", desc: "Training (from scratch): building a new LLM. Thousands of GPUs, $50-100M. Meta/Anthropic/Google territory. Fine-tuning: adjusting an existing model on your domain data. Needs cloud GPU for hours, costs $2-10. Produces a specialized model. RAG: giving an existing model your documents at query time. No model changes. Runs on a laptop. Start here.", keywords: "training fine-tuning rag difference" },
+  { cat: "ai", title: "Building RAG for Your Organization", desc: "Quickest path: Microsoft Copilot Studio pointed at SharePoint (if already licensed). If that's insufficient: Azure AI Search + Azure OpenAI or AWS OpenSearch + Bedrock with Claude. For proof of concept: ChromaDB + Ollama on a laptop at zero cost. Key: restructure documents so each file covers one topic with clear metadata. The chunking strategy matters more than the model choice.", keywords: "building rag organization enterprise copilot" },
+];
+
+const defined_faqs = [
+  { q: "If Vanta handles SOC 2 and ISO 27001, what's left for my team?", a: "FedRAMP, PCI DSS depth, customer-specific standards, custom policies, narrative writing, OSCAL generation, and everything Vanta can't reach. Vanta gets you 40-50% of the way. Your team and pipeline handle the rest." },
+  { q: "Can I use Vanta for FedRAMP?", a: "No. Vanta itself is not FedRAMP authorized and cannot be used for FedRAMP workloads. All FedRAMP compliance work requires your own toolchain." },
+  { q: "What is a 'pipeline' in compliance-as-code?", a: "A chain of automated steps: Steampipe queries cloud → OPA checks policies → results formatted as OSCAL → stored for audit. It's a script that calls tools in order. You can run it from a cron job." },
+  { q: "Do I need to be a developer to do compliance-as-code?", a: "No. You need to understand what the tools do and why. AI coding assistants (Claude Code) can write the actual Python/scripts. You provide the compliance logic and architecture. That's the hard part." },
+  { q: "Why don't SAST and DAST tools catch leaked secrets?", a: "Different specialization. SAST analyzes code logic (SQL injection, XSS). DAST attacks running apps from outside. Secrets detection uses pattern matching and entropy analysis — a completely different approach. You need dedicated tools like GitGuardian or Aikido." },
+  { q: "Why do developers use public GitHub repos if secrets can be exposed?", a: "Open-source software requires public repos. Public code reviewed by thousands of eyes is often more secure than private code. The rule: public repos contain ONLY code designed to be public — never secrets, proprietary logic, or customer data." },
+  { q: "Why do developers put secrets in code?", a: "Path of least resistance. Testing locally and forgetting to remove credentials, not knowing about environment variables, copy-paste from docs. It's a human behavior problem — predictable shortcuts under deadline pressure. Fix with automated guardrails, not policy memos." },
+  { q: "What's the difference between VPC Peering and PrivateLink?", a: "Peering = bidirectional network connectivity between two VPCs (tunnel between buildings). PrivateLink = one specific service exposed from one VPC to another (phone line to one department). PrivateLink is preferred for FedRAMP because it follows least privilege." },
+  { q: "What is an AWS endpoint? What are FIPS endpoints?", a: "An endpoint is the URL your app uses to call an AWS service (s3.us-east-1.amazonaws.com). A FIPS endpoint is the same service but with FIPS 140-2 validated cryptography for TLS. It's a URL change: add '-fips' to the endpoint. Required for FedRAMP." },
+  { q: "What is the difference between a Facade and an API Gateway?", a: "API Gateway = real infrastructure handling network traffic (auth, TLS, logging). Auditable, visible in architecture diagrams. Facade = code pattern that simplifies calling multiple services into one clean interface. Lives inside application code, not infrastructure." },
+  { q: "What is OSCAL and why does it matter?", a: "Machine-readable format (JSON/XML) for expressing security controls and compliance data. Mandatory for all FedRAMP providers by September 2026. Replaces 500-page Word SSPs with structured data computers can validate automatically." },
+  { q: "What is GRC Engineering?", a: "The evolution from traditional GRC (policies + screenshots) to engineering-driven compliance (policies-as-code + automated evidence + version-controlled controls + CI/CD pipeline integration). It embraces systems thinking, automation, and DevSecOps principles." },
+  { q: "Can I run LLMs locally for compliance work?", a: "Yes. Ollama + Llama 8B on a MacBook with 24GB RAM handles drafting narratives, parsing OSCAL, writing policies. For larger models or sensitive production data, use AWS Bedrock (Claude in your AWS boundary) or Azure OpenAI." },
+  { q: "What is RAG and how does it help compliance?", a: "Retrieval-Augmented Generation gives an LLM your specific documents as context. Instead of hallucinating, it answers from your actual SSP, policies, and audit reports. Build with ChromaDB + Ollama locally, or Azure AI Search + Bedrock in production." },
+  { q: "What is MCP and how is it different from RAG?", a: "RAG retrieves from static documents. MCP lets AI call live tools (query databases, search repos, call APIs). Together: RAG retrieves your SSP claims + MCP queries live AWS state = automated gap detection." },
+  { q: "Who manages Kubernetes security?", a: "Platform Engineering or SRE teams manage the cluster. Your security team sets the policies they enforce. OPA/Gatekeeper acts as an admission controller — blocking any deployment that violates compliance policies before it runs." },
+  { q: "Do I need 64GB RAM for compliance-as-code tools?", a: "No. Steampipe, Prowler, OPA, Terraform, Docker are all I/O-bound (waiting on API calls), not memory-bound. 24GB handles everything. 64GB only matters for running large local LLMs (70B+ parameters). Cloud APIs eliminate this need." },
+];
+
+const catLabels = {
+  tools: "Compliance Tools",
+  fedramp: "FedRAMP 20x & OSCAL",
+  devtools: "Developer Tools",
+  scanning: "Security Scanning",
+  cloud: "Cloud Architecture (AWS)",
+  security: "Security Concepts",
+  architecture: "Architecture Patterns",
+  ai: "AI & ML for Compliance",
+};
+
+const catColors = {
+  tools: "#06b6d4", fedramp: "#22c55e", devtools: "#8b5cf6",
+  scanning: "#ef4444", cloud: "#3b82f6", security: "#f59e0b",
+  architecture: "#ec4899", ai: "#a855f7",
+};
+
+function TopicCard({ t }) {
+  const [open, setOpen] = useState(false);
+  const color = catColors[t.cat];
+  return (
+    <div style={{
+      background: open ? `${color}06` : "#0c0c18",
+      border: `1px solid ${open ? color + "50" : "#1a1a2e"}`,
+      borderRadius: "8px", borderLeft: `3px solid ${color}`, transition: "all 0.15s",
+    }}>
+      <div onClick={() => setOpen(!open)} style={{
+        padding: "12px 16px", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <span style={{ fontSize: "14px", fontWeight: 600, color }}>{t.title}</span>
+        <span style={{ color: "#333", fontSize: "12px" }}>{open ? "▾" : "▸"}</span>
+      </div>
+      {open && (
+        <div style={{ padding: "0 16px 14px", animation: "fadeIn 0.15s ease" }}>
+          <p style={{ fontSize: "13px", color: "#b0b8c8", lineHeight: "1.7", margin: "0 0 8px" }}>{t.desc}</p>
+          {t.code && (
+            <pre style={{
+              background: "#080810", border: "1px solid #1a1a2e", borderRadius: "6px",
+              padding: "10px 12px", fontSize: "10.5px", color: color,
+              fontFamily: "'JetBrains Mono', monospace", whiteSpace: "pre-wrap",
+              lineHeight: "1.5", margin: "8px 0",
+            }}>{t.code}</pre>
+          )}
+          {t.compliance && (
+            <div style={{
+              background: "#22c55e08", borderRadius: "5px", padding: "8px 10px",
+              borderLeft: "2px solid #22c55e", marginTop: "8px",
+            }}>
+              <span style={{ fontSize: "10px", fontWeight: 700, color: "#22c55e", textTransform: "uppercase", letterSpacing: "0.5px" }}>Compliance: </span>
+              <span style={{ fontSize: "11px", color: "#888" }}>{t.compliance}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KnowledgeBase() {
+  const [search, setSearch] = useState("");
+  const [activeCat, setActiveCat] = useState("tools");
+  const [showFaq, setShowFaq] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+
+  const filtered = useMemo(() => {
+    if (!search) return defined_topics.filter(t => t.cat === activeCat);
+    const s = search.toLowerCase();
+    return defined_topics.filter(t =>
+      t.title.toLowerCase().includes(s) ||
+      t.desc.toLowerCase().includes(s) ||
+      (t.keywords && t.keywords.includes(s)) ||
+      (t.compliance && t.compliance.toLowerCase().includes(s))
+    );
+  }, [search, activeCat]);
+
+  const filteredFaqs = useMemo(() => {
+    if (!search) return defined_faqs;
+    const s = search.toLowerCase();
+    return defined_faqs.filter(f => f.q.toLowerCase().includes(s) || f.a.toLowerCase().includes(s));
+  }, [search]);
+
+  return (
+    <div style={{
+      background: "#060610", color: "#d0d0e0", minHeight: "100vh",
+      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } } a { color: #60a5fa; }`}</style>
+
+      {/* Hero */}
+      <div style={{
+        background: "linear-gradient(135deg, #0a0a1a 0%, #0f1629 50%, #0a0f1a 100%)",
+        padding: "48px 28px 40px", borderBottom: "1px solid #1a1a2e",
+      }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <div style={{ fontSize: "11px", color: "#555", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px" }}>Technical Reference Guide</div>
+          <h1 style={{
+            margin: "0 0 8px", fontSize: "32px", fontWeight: 800,
+            fontFamily: "'Playfair Display', serif",
+            background: "linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #22c55e 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            lineHeight: "1.2",
+          }}>
+            Compliance-as-Code
+          </h1>
+          <h2 style={{ margin: "0 0 16px", fontSize: "18px", fontWeight: 400, color: "#8888aa" }}>
+            A Technical Guide for GRC Professionals
+          </h2>
+          <div style={{ fontSize: "13px", color: "#555" }}>
+            By Rupinder Pal Singh
+          </div>
+          <div style={{ fontSize: "11px", color: "#444", marginTop: "4px" }}>
+            CISSP | CISM | CISA | CRISC
+          </div>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px 28px 60px" }}>
+
+        {/* Search */}
+        <input
+          placeholder="Search topics, concepts, frameworks..."
+          value={search}
+          onChange={e => { setSearch(e.target.value); setShowFaq(false); }}
+          style={{
+            width: "100%", background: "#0c0c18", border: "1px solid #1a1a2e",
+            color: "#d0d0e0", padding: "12px 16px", borderRadius: "8px",
+            fontSize: "14px", marginBottom: "20px", boxSizing: "border-box",
+            outline: "none",
+          }}
+        />
+
+        {/* Category nav + FAQ toggle */}
+        <div style={{ display: "flex", gap: "4px", marginBottom: "20px", flexWrap: "wrap" }}>
+          {!search && Object.entries(catLabels).map(([id, label]) => (
+            <button key={id} onClick={() => { setActiveCat(id); setShowFaq(false); }} style={{
+              background: !showFaq && activeCat === id ? catColors[id] + "20" : "#0c0c18",
+              border: `1px solid ${!showFaq && activeCat === id ? catColors[id] + "60" : "#1a1a2e"}`,
+              color: !showFaq && activeCat === id ? catColors[id] : "#555",
+              padding: "6px 12px", borderRadius: "6px", cursor: "pointer",
+              fontSize: "11px", fontWeight: !showFaq && activeCat === id ? 700 : 400,
+              transition: "all 0.15s",
+            }}>{label}</button>
+          ))}
+          <button onClick={() => setShowFaq(!showFaq)} style={{
+            background: showFaq ? "#f59e0b20" : "#0c0c18",
+            border: `1px solid ${showFaq ? "#f59e0b60" : "#1a1a2e"}`,
+            color: showFaq ? "#f59e0b" : "#555",
+            padding: "6px 12px", borderRadius: "6px", cursor: "pointer",
+            fontSize: "11px", fontWeight: showFaq ? 700 : 400,
+          }}>FAQ ({defined_faqs.length})</button>
+        </div>
+
+        {/* Search results count */}
+        {search && (
+          <div style={{ fontSize: "12px", color: "#555", marginBottom: "12px" }}>
+            {filtered.length} topic{filtered.length !== 1 ? "s" : ""} + {filteredFaqs.length} FAQ{filteredFaqs.length !== 1 ? "s" : ""} matching "{search}"
+          </div>
+        )}
+
+        {/* Topics */}
+        {!showFaq && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", animation: "fadeIn 0.2s ease" }}>
+            {filtered.length === 0 && (
+              <div style={{ padding: "40px", textAlign: "center", color: "#444" }}>No topics match your search.</div>
+            )}
+            {filtered.map((t, i) => <TopicCard key={t.title + i} t={t} />)}
+          </div>
+        )}
+
+        {/* Search: also show FAQs */}
+        {search && filteredFaqs.length > 0 && (
+          <div style={{ marginTop: "20px" }}>
+            <div style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>Matching FAQs</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {filteredFaqs.map((f, i) => (
+                <div key={i} style={{
+                  background: openFaq === `s${i}` ? "#f59e0b06" : "#0c0c18",
+                  border: `1px solid ${openFaq === `s${i}` ? "#f59e0b50" : "#1a1a2e"}`,
+                  borderRadius: "8px", borderLeft: "3px solid #f59e0b",
+                }}>
+                  <div onClick={() => setOpenFaq(openFaq === `s${i}` ? null : `s${i}`)} style={{
+                    padding: "12px 16px", cursor: "pointer",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                  }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#f59e0b" }}>{f.q}</span>
+                    <span style={{ color: "#333", fontSize: "12px" }}>{openFaq === `s${i}` ? "▾" : "▸"}</span>
+                  </div>
+                  {openFaq === `s${i}` && (
+                    <div style={{ padding: "0 16px 14px" }}>
+                      <p style={{ fontSize: "13px", color: "#b0b8c8", lineHeight: "1.7", margin: 0 }}>{f.a}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* FAQ Section */}
+        {showFaq && !search && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ fontSize: "12px", color: "#555", marginBottom: "8px" }}>
+              Real questions from a GRC professional learning technical concepts. Click to expand.
+            </div>
+            {defined_faqs.map((f, i) => (
+              <div key={i} style={{
+                background: openFaq === i ? "#f59e0b06" : "#0c0c18",
+                border: `1px solid ${openFaq === i ? "#f59e0b50" : "#1a1a2e"}`,
+                borderRadius: "8px", borderLeft: "3px solid #f59e0b",
+              }}>
+                <div onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{
+                  padding: "12px 16px", cursor: "pointer",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#d0d0e0" }}>{f.q}</span>
+                  <span style={{ color: "#333", fontSize: "12px" }}>{openFaq === i ? "▾" : "▸"}</span>
+                </div>
+                {openFaq === i && (
+                  <div style={{ padding: "0 16px 14px" }}>
+                    <p style={{ fontSize: "13px", color: "#b0b8c8", lineHeight: "1.7", margin: 0 }}>{f.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{
+          marginTop: "48px", paddingTop: "24px", borderTop: "1px solid #1a1a2e",
+          textAlign: "center",
+        }}>
+          <div style={{ fontSize: "12px", color: "#444" }}>
+            Compliance-as-Code: A Technical Guide for GRC Professionals
+          </div>
+          <div style={{ fontSize: "11px", color: "#333", marginTop: "4px" }}>
+            By Rupinder Pal Singh | 2026
+          </div>
+          <div style={{ fontSize: "10px", color: "#2a2a3a", marginTop: "8px" }}>
+            40+ topics | 16 FAQs | 8 categories | Searchable
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(KnowledgeBase));
+</script>
+</body>
+</html>
