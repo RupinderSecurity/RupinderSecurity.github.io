@@ -209,31 +209,60 @@ function KnowledgeBase() {
       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
       <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } } a { color: #60a5fa; }`}</style>
 
-      {/* Hero */}
+      {/* Hero / Profile Section */}
       <div style={{
         background: "linear-gradient(135deg, #0a0a1a 0%, #0f1629 50%, #0a0f1a 100%)",
         padding: "48px 28px 40px", borderBottom: "1px solid #1a1a2e",
       }}>
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div style={{ fontSize: "11px", color: "#555", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px" }}>Technical Reference Guide</div>
-          <h1 style={{
-            margin: "0 0 8px", fontSize: "32px", fontWeight: 800,
-            fontFamily: "'Playfair Display', serif",
-            background: "linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #22c55e 100%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            lineHeight: "1.2",
-          }}>
-            Compliance-as-Code
-          </h1>
-          <h2 style={{ margin: "0 0 16px", fontSize: "18px", fontWeight: 400, color: "#8888aa" }}>
-            A Technical Guide for GRC Professionals
-          </h2>
-          <div style={{ fontSize: "13px", color: "#555" }}>
-            By Rupinder Pal Singh
+        <div style={{ maxWidth: "800px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          {/* Profile Header */}
+          <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
+            {/* The image automatically pulls your GitHub profile picture */}
+            <img 
+              src="https://github.com/RupinderSecurity.png" 
+              alt="Rupinder Pal Singh" 
+              style={{ width: "120px", height: "120px", borderRadius: "50%", border: "2px solid #3b82f6", objectFit: "cover", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }} 
+            />
+            <div>
+              <h1 style={{
+                margin: "0 0 8px", fontSize: "32px", fontWeight: 800,
+                fontFamily: "'Playfair Display', serif",
+                background: "linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #22c55e 100%)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                lineHeight: "1.2",
+              }}>
+                Rupinder Pal Singh
+              </h1>
+              <h2 style={{ margin: "0 0 8px", fontSize: "18px", fontWeight: 400, color: "#d0d0e0" }}>
+                Manager, IT Audit & Compliance @ NICE
+              </h2>
+              <div style={{ fontSize: "13px", color: "#8888aa", marginBottom: "12px" }}>
+                CISSP | CISM | CISA | CRISC | MS Cybersecurity | MS Clinical Mental Health Counseling
+              </div>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <a href="https://www.linkedin.com/in/rupinder-pal-s-13881516/" target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "#60a5fa", display: "flex", alignItems: "center", gap: "4px", fontWeight: 600 }}>
+                  LinkedIn &nearr;
+                </a>
+                <a href="mailto:rupinderpalsing@proton.me" style={{ fontSize: "13px", color: "#a78bfa", display: "flex", alignItems: "center", gap: "4px", fontWeight: 600 }}>
+                  Email &nearr;
+                </a>
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: "11px", color: "#444", marginTop: "4px" }}>
-            CISSP | CISM | CISA | CRISC
+
+          {/* Professional Bio Box */}
+          <div style={{ fontSize: "15px", color: "#b0b8c8", lineHeight: "1.6", background: "#0c0c18", padding: "20px", borderRadius: "8px", border: "1px solid #1a1a2e", borderLeft: "3px solid #22c55e" }}>
+            <p style={{ marginBottom: "12px" }}>
+              Cybersecurity, GRC, and Audit leader driving enterprise risk strategy across global frameworks (FedRAMP, ISO 42001, SOC 2). I bridge the gap between technical security architecture and human psychology to build resilient organizations.
+            </p>
+            <ul style={{ paddingLeft: "20px", color: "#8888aa", fontSize: "14px", lineHeight: "1.8" }}>
+              <li><strong>Current Focus:</strong> AI governance, model transparency, and leading ISO 42001 readiness.</li>
+              <li><strong>Research:</strong> Developer of the UNICORN Framework for LLM Guardrail Auditing.</li>
+              <li><strong>Community:</strong> Reviewer for ISACA CISA/CRISC exams & Scholarship Judge for ISACA and ISC2.</li>
+            </ul>
           </div>
+
         </div>
       </div>
 
